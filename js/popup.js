@@ -49,6 +49,12 @@ function updateMenu(status) {
         $('#action1').addClass('enabled').click(startWork);
     }
 
+    if (status.finish) {
+        $('#action3').text('業終 ' + status.finish).removeClass('enabled').unbind('click', finishWork);
+    } else {
+        $('#action3').addClass('enabled').click(finishWork);
+    }
+
     if (status.leave) {
         $('#action2').text('退社 ' + status.leave).removeClass('enabled').unbind('click', leaveWork);
     } else {
@@ -86,6 +92,13 @@ function addMenus($service) {
  */
 function startWork() {
     confirmDialog(KTR.message.get('start'), stamp.bind(null, KTR.STAMP.ON));
+}
+
+/**
+ * 業務終了処理
+ */
+function finishWork() {
+    confirmDialog(KTR.message.get('finish'), stamp.bind(null, KTR.STAMP.OFF));
 }
 
 /**

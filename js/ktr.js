@@ -6,13 +6,14 @@
      * Constant
      */
     const KTR = root.KTR = {
-        STATUS: {UNKNOWN: 0, BEFORE: 1, ON_THE_JOB: 2, AFTER: 3},
-        BADGE: ['#fff', '#ffc800', '#60d880', '#46d'],
-        TITLE: ['設定をしてください', '未出社', '出社', '退社'],
+        STATUS: {UNKNOWN: 0, BEFORE: 1, ON_THE_JOB: 2, FINISH: 3, AFTER: 4},
+        BADGE: ['#fff', '#ffc800', '#60d880', '#bbd1d8', '#46d'],
+        TITLE: ['設定をしてください', '未出社', '出社', '業終', '退社'],
         STAMP:  {ON: 1, OFF: 2},
-        ACTION: ['', '出社', '退社'],
+        ACTION: ['', '出社', '業終', '退社'],
         MESSAGE: {
             start: '出社しましたか？',
+            finish: '本日も一日お疲れ様でした。',
             leave: '退社しますか？'
         },
         CACHE_TTL: 4 * 60 * 60 * 1000,
@@ -339,6 +340,10 @@
                     status.start = RegExp.$1;
                     status.code = KTR.STATUS.ON_THE_JOB;
                 }
+                if (/>業終<br(?:\s*\/)?>\((\d\d:\d\d)\)/.test(html)) {
+                    status.finish = RegExp.$1;
+                    status.code = KTR.STATUS.FINISH;
+                }
                 if (/>退社<br(?:\s*\/)?>\((\d\d:\d\d)\)/.test(html)) {
                     status.leave = RegExp.$1;
                     status.code = KTR.STATUS.AFTER;
@@ -514,6 +519,7 @@
                     const status = KTR.status.scan(html);
                     if (
                         type === KTR.STAMP.ON  && !status.start ||
+                        type === KTR.STAMP.OFF && !status.finish ||
                         type === KTR.STAMP.OFF && !status.leave
                     ) {
                         KTR.error('処理に失敗しました。');
@@ -521,7 +527,7 @@
                     }
                     KTR.notify({
                         message: KTR.ACTION[type] + 'しました。',
-                        contextMessage: ['', status.start, status.leave][type]
+                        contextMessage: ['', status.start, status.finish, status.leave][type]
                     });
                     KTR.clearAnnounce();
                     cb(status);

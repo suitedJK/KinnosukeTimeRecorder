@@ -15,11 +15,14 @@ function restore() {
 
     const msg = KTR.message.get();
     $('#start').val(msg.start).prop('placeholder', KTR.MESSAGE.start);
+    $('#finish').val(msg.finish).prop('placeholder', KTR.MESSAGE.finish);
     $('#leave').val(msg.leave).prop('placeholder', KTR.MESSAGE.leave);
 
     const alarms = KTR.alarms.get();
     $('#start-alarm-begin').val(alarms.startAlarmBegin);
     $('#start-alarm-end').val(alarms.startAlarmEnd);
+    $('#finish-alarm-begin').val(alarms.finishAlarmBegin);
+    $('#finish-alarm-end').val(alarms.finishAlarmEnd);
     $('#leave-alarm-begin').val(alarms.leaveAlarmBegin);
     $('#leave-alarm-end').val(alarms.leaveAlarmEnd);
 }
@@ -34,11 +37,14 @@ function save() {
     KTR.site.update($('[name="site"]:checked').val());
     KTR.message.update({
         start: $('#start').val(),
+        finish: $('#finish').val(),
         leave: $('#leave').val()
     });
     KTR.alarms.update({
         startAlarmBegin: $('#start-alarm-begin').val(),
         startAlarmEnd: $('#start-alarm-end').val(),
+        finishAlarmBegin: $('#finish-alarm-begin').val(),
+        finishAlarmEnd: $('#finish-alarm-end').val(),
         leaveAlarmBegin: $('#leave-alarm-begin').val(),
         leaveAlarmEnd: $('#leave-alarm-end').val()
     });

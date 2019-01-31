@@ -59,6 +59,17 @@ chrome.alarms.onAlarm.addListener(function() {
             }
         }
 
+        // 出勤中かつ業務終了アラートの設定がある場合
+        if (status == KTR.STATUS.ON_THE_JOB && alerms.finishAlarmBegin && alerms.finishAlarmEnd) {
+            const begin = moment(`${alerms.finishAlarmBegin}:00`, format);
+            const end = moment(`${alerms.finishAlarmEnd}:59`, format);
+
+            if (now.isBetween(begin, end)) {
+                args = Object.assign({message: KTR.MESSAGE.finish}, args)
+                chrome.notifications.create(`notification_${notificationId}`, args);
+            }
+        }
+
         // 出勤中かつ退勤アラートの設定がある場合
         if (status == KTR.STATUS.ON_THE_JOB && alerms.leaveAlarmBegin && alerms.leaveAlarmEnd) {
             const begin = moment(`${alerms.leaveAlarmBegin}:00`, format);
