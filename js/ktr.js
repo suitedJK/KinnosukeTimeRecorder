@@ -8,12 +8,12 @@
     const KTR = root.KTR = {
         STATUS: {UNKNOWN: 0, BEFORE: 1, ON_THE_JOB: 2, FINISH: 3, AFTER: 4},
         BADGE: ['#fff', '#ffc800', '#60d880', '#bbd1d8', '#46d'],
-        TITLE: ['設定をしてください', '未出社', '出社', '業終', '退社'],
-        STAMP:  {ON: 1, OFF: 2},
-        ACTION: ['', '出社', '業終', '退社'],
+        TITLE: ['設定をしてください', '未出社', '出社', '業務終了', '退社'],
+        STAMP:  {ON: 1, FIN: 2001, OFF: 2},
+        ACTION: {1: '出社', 2001: '業務終了', 2: '退社'},
         MESSAGE: {
             start: '出社しましたか？',
-            finish: '本日も一日お疲れ様でした。',
+            finish: '業務終了！本日も一日お疲れ様でした。',
             leave: '退社しますか？'
         },
         CACHE_TTL: 4 * 60 * 60 * 1000,
@@ -232,7 +232,7 @@
         get() {
             let siteId = localStorage.SiteId;
             if (typeof siteId === 'undefined') {
-                siteId = localStorage.SiteId = 0;
+                siteId = localStorage.SiteId = 1;
             }
             return siteId;
         },
@@ -336,15 +336,15 @@
             // 出退社時刻
             if (/<input type="hidden" name="action" value="timerecorder"/.test(html)) {
                 status.code = KTR.STATUS.BEFORE;
-                if (/>出社<br(?:\s*\/)?>\((\d\d:\d\d)\)/.test(html)) {
+                if (/出社<br(?:\s*\/)?>時刻<br(?:\s*\/)?>\((\d\d:\d\d)\)/.test(html)) {
                     status.start = RegExp.$1;
                     status.code = KTR.STATUS.ON_THE_JOB;
                 }
-                if (/>業終<br(?:\s*\/)?>\((\d\d:\d\d)\)/.test(html)) {
+                if (/業務<br(?:\s*\/)?>終了<br(?:\s*\/)?>\((\d\d:\d\d)\)/.test(html)) {
                     status.finish = RegExp.$1;
                     status.code = KTR.STATUS.FINISH;
                 }
-                if (/>退社<br(?:\s*\/)?>\((\d\d:\d\d)\)/.test(html)) {
+                if (/退社<br(?:\s*\/)?>時刻<br(?:\s*\/)?>\((\d\d:\d\d)\)/.test(html)) {
                     status.leave = RegExp.$1;
                     status.code = KTR.STATUS.AFTER;
                 }
@@ -519,7 +519,7 @@
                     const status = KTR.status.scan(html);
                     if (
                         type === KTR.STAMP.ON  && !status.start ||
-                        type === KTR.STAMP.OFF && !status.finish ||
+                        type === KTR.STAMP.FIN && !status.finish ||
                         type === KTR.STAMP.OFF && !status.leave
                     ) {
                         KTR.error('処理に失敗しました。');

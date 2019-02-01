@@ -15,6 +15,7 @@ Chrome ウェブストアから「[勤之助タイムレコーダー](https://ch
 - ![勤之助](https://github.com/irok/KinnosukeTimeRecorder/raw/master/images/icon19.png) のところに表示される小さな ■ は現在の状態を表しています。
     - 黄：未出社
     - 緑：出社
+    - 灰：業務終了
     - 青：退社
 
 ## 安全性について
@@ -32,6 +33,8 @@ npm install
 chrome://extensions/ の「デベロッパーモード」をチェックして「パッケージ化されていない拡張機能を読み込む」を押し、KinnosukeTimeRecorder ディレクトリを選択してください。
 
 ## 更新履歴
+- v3.3.0 (2019-02-01)
+    - 業務終了ボタンに対応
 
 - v3.2.0 (2018-04-27)
     - 出退勤の定期通知ができるようになりました [#4](https://github.com/irok/KinnosukeTimeRecorder/pull/4)

@@ -98,7 +98,7 @@ function startWork() {
  * 業務終了処理
  */
 function finishWork() {
-    confirmDialog(KTR.message.get('finish'), stamp.bind(null, KTR.STAMP.OFF));
+    confirmDialog(KTR.message.get('finish'), stamp.bind(null, KTR.STAMP.FIN));
 }
 
 /**

@@ -49,7 +49,7 @@ chrome.alarms.onAlarm.addListener(function() {
     KTR.service.mytop((html) => {
         const status = KTR.status.scan(html).code
         // 出勤前かつ出勤アラートの設定がある場合
-        if (status == KTR.STATUS.BEFORE && alerms.startAlarmBegin && alerms.startAlarmEnd) {
+        if (status === KTR.STATUS.BEFORE && alerms.startAlarmBegin && alerms.startAlarmEnd) {
             const begin = moment(`${alerms.startAlarmBegin}:00`, format);
             const end = moment(`${alerms.startAlarmEnd}:59`, format);
 
@@ -60,7 +60,7 @@ chrome.alarms.onAlarm.addListener(function() {
         }
 
         // 出勤中かつ業務終了アラートの設定がある場合
-        if (status == KTR.STATUS.ON_THE_JOB && alerms.finishAlarmBegin && alerms.finishAlarmEnd) {
+        if (status === KTR.STATUS.ON_THE_JOB && alerms.finishAlarmBegin && alerms.finishAlarmEnd) {
             const begin = moment(`${alerms.finishAlarmBegin}:00`, format);
             const end = moment(`${alerms.finishAlarmEnd}:59`, format);
 
@@ -70,8 +70,8 @@ chrome.alarms.onAlarm.addListener(function() {
             }
         }
 
-        // 出勤中かつ退勤アラートの設定がある場合
-        if (status == KTR.STATUS.ON_THE_JOB && alerms.leaveAlarmBegin && alerms.leaveAlarmEnd) {
+        // 業務終了済みかつ退勤アラートの設定がある場合
+        if (status === KTR.STATUS.FINISH && alerms.leaveAlarmBegin && alerms.leaveAlarmEnd) {
             const begin = moment(`${alerms.leaveAlarmBegin}:00`, format);
             const end = moment(`${alerms.leaveAlarmEnd}:59`, format);
 
