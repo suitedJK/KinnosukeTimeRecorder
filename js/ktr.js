@@ -271,6 +271,7 @@
         },
         update(alarms) {
             localStorage.Alarms = JSON.stringify(alarms);
+            KTR.setAlarm();
         }
     };
 
@@ -568,4 +569,33 @@
             KTR.error(message);
         }
     };
+
+    KTR.setAlarm = () => {
+        const alarms = KTR.alarms.get();
+        let params;
+
+        chrome.alarms.clearAll();
+
+        if (alarms.startAlarmBegin) {
+            params = {when: moment(alarms.startAlarmBegin, 'HH:mm').valueOf()};
+            if (alarms.startAlarmEnd) {
+                params.periodInMinutes = 5;
+            }
+            chrome.alarms.create('startWorkAlarm', params);
+        }
+        if (alarms.finishAlarmBegin) {
+            params = {when: moment(alarms.finishAlarmBegin, 'HH:mm').valueOf()};
+            if (alarms.finishAlarmEnd) {
+                params.periodInMinutes = 5;
+            }
+            chrome.alarms.create('finishWorkAlarm', params);
+        }
+        if (alarms.leaveAlarmBegin) {
+            params = {when: moment(alarms.leaveAlarmBegin, 'HH:mm').valueOf()};
+            if (alarms.leaveAlarmEnd) {
+                params.periodInMinutes = 5;
+            }
+            chrome.alarms.create('leaveWorkAlarm', params);
+        }
+    }
 })(this);
