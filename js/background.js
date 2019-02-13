@@ -4,6 +4,8 @@ chrome.runtime.onStartup.addListener(() => {
         KTR.status.update(() => {
             // 起動時にAjax通信するとプロセスが残ってしまう問題への対応
             // chrome.runtime.reload();
+
+            KTR.setAlarm();
         });
     }
 });
@@ -16,7 +18,7 @@ window.addEventListener('load', () => {
 // コンテントスクリプトからのステータス更新通知
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (KTR.credential.valid()) {
-        var status = KTR.status.scrape(message.html);
+        const status = KTR.status.scrape(message.html);
         if (status.authorized && status.code !== KTR.STATUS.UNKNOWN) {
             KTR.status.change(status);
         }
@@ -25,10 +27,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 chrome.runtime.onInstalled.addListener(() => {
-    chrome.alarms.create('alerm', { periodInMinutes: 5 });
+    KTR.setAlarm();
 });
 
-chrome.alarms.onAlarm.addListener(function() {
+chrome.alarms.onAlarm.addListener((alarm) => {
     if (!KTR.credential.valid()) {
         return
     }
@@ -36,9 +38,9 @@ chrome.alarms.onAlarm.addListener(function() {
     const manifest = chrome.runtime.getManifest();
     const notificationId = Math.floor(Math.random() * 9007199254740992) + 1;
 
-    const alerms = KTR.alarms.get();
-    const format = 'hh:mm:ss'
-    const now = moment(moment(), format)
+    const alarms = KTR.alarms.get();
+    const format = 'HH:mm:ss';
+    const now = moment(moment(), format);
     let args = {
         type: 'basic',
         title: manifest.name,
@@ -47,38 +49,74 @@ chrome.alarms.onAlarm.addListener(function() {
     };
 
     KTR.service.mytop((html) => {
-        const status = KTR.status.scan(html).code
-        // 出勤前かつ出勤アラートの設定がある場合
-        if (status === KTR.STATUS.BEFORE && alerms.startAlarmBegin && alerms.startAlarmEnd) {
-            const begin = moment(`${alerms.startAlarmBegin}:00`, format);
-            const end = moment(`${alerms.startAlarmEnd}:59`, format);
-
-            if (now.isBetween(begin, end)) {
-                args = Object.assign({message: KTR.MESSAGE.start}, args)
-                chrome.notifications.create(`notification_${notificationId}`, args);
+        const status = KTR.status.scan(html).code;
+        if (alarm.name === 'startWorkAlarm') {
+            if (!alarms.startAlarmBegin) {
+                chrome.alarms.clear('startWorkAlarm');
+                return;
             }
+            if (status !== KTR.STATUS.BEFORE) {
+                return;
+            }
+            // 出勤前かつ出勤アラートの設定がある場合
+            if (alarms.startAlarmEnd) {
+                const begin = moment(`${alarms.startAlarmBegin}:00`, format);
+                const end = moment(`${alarms.startAlarmEnd}:59`, format);
+
+                if (!now.isBetween(begin, end)) {
+                    chrome.alarms.clear('startWorkAlarm');
+                    return;
+                }
+            }
+
+            args = Object.assign({message: KTR.MESSAGE.start}, args);
+            chrome.notifications.create(`notification_${notificationId}`, args);
         }
 
-        // 出勤中かつ業務終了アラートの設定がある場合
-        if (status === KTR.STATUS.ON_THE_JOB && alerms.finishAlarmBegin && alerms.finishAlarmEnd) {
-            const begin = moment(`${alerms.finishAlarmBegin}:00`, format);
-            const end = moment(`${alerms.finishAlarmEnd}:59`, format);
-
-            if (now.isBetween(begin, end)) {
-                args = Object.assign({message: KTR.MESSAGE.finish}, args)
-                chrome.notifications.create(`notification_${notificationId}`, args);
+        if (alarm.name === 'finishWorkAlarm') {
+            if (!alarms.finishAlarmBegin) {
+                chrome.alarms.clear('finishWorkAlarm');
+                return;
             }
+            if (status !== KTR.STATUS.ON_THE_JOB) {
+                return;
+            }
+            // 出勤中かつ業務終了アラートの設定がある場合
+            if (alarms.finishAlarmEnd) {
+                const begin = moment(`${alarms.finishAlarmBegin}:00`, format);
+                const end = moment(`${alarms.finishAlarmEnd}:59`, format);
+
+                if (!now.isBetween(begin, end)) {
+                    chrome.alarms.clear('finishWorkAlarm');
+                    return;
+                }
+            }
+
+            args = Object.assign({message: KTR.MESSAGE.finish}, args);
+            chrome.notifications.create(`notification_${notificationId}`, args);
         }
 
-        // 業務終了済みかつ退勤アラートの設定がある場合
-        if (status === KTR.STATUS.FINISH && alerms.leaveAlarmBegin && alerms.leaveAlarmEnd) {
-            const begin = moment(`${alerms.leaveAlarmBegin}:00`, format);
-            const end = moment(`${alerms.leaveAlarmEnd}:59`, format);
-
-            if (now.isBetween(begin, end)) {
-                args = Object.assign({message: KTR.MESSAGE.leave}, args)
-                chrome.notifications.create(`notification_${notificationId}`, args);
+        if (alarm.name === 'leaveWorkAlarm') {
+            if (!alarms.leaveAlarmBegin) {
+                chrome.alarms.clear('leaveWorkAlarm');
+                return;
             }
+            if (status !== KTR.STATUS.FINISH) {
+                return;
+            }
+            // 業務終了済みかつ退勤アラートの設定がある場合
+            if (alarms.leaveAlarmEnd) {
+                const begin = moment(`${alarms.leaveAlarmBegin}:00`, format);
+                const end = moment(`${alarms.leaveAlarmEnd}:59`, format);
+
+                if (!now.isBetween(begin, end)) {
+                    chrome.alarms.clear('leaveWorkAlarm');
+                    return;
+                }
+            }
+
+            args = Object.assign({message: KTR.MESSAGE.leave}, args);
+            chrome.notifications.create(`notification_${notificationId}`, args);
         }
     });
 });
