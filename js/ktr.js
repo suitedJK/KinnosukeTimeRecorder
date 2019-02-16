@@ -566,7 +566,8 @@
 
         // ネットワークエラー
         error({message}) {
-            KTR.error(message);
+            // KTR.error(message);
+            console.error(message);
         }
     };
 
