@@ -276,6 +276,22 @@
     };
 
     /**
+     * その他設定
+     */
+    KTR.others = {
+        get() {
+            let others = localStorage.Others;
+            if (typeof others === 'undefined') {
+                others = localStorage.Others = JSON.stringify({});
+            }
+            return JSON.parse(others);
+        },
+        update(others) {
+            localStorage.Others = JSON.stringify(others);
+        }
+    };
+
+    /**
      * メニュー管理
      */
     KTR.menuList = {
@@ -506,7 +522,7 @@
             });
         },
 
-        // 出社・退社ボタンを押す
+        // 打刻ボタンを押す
         stamp(type, cb) {
             KTR.service.getCsrfToken((token) => {
                 const query = {
@@ -526,6 +542,19 @@
                         KTR.error('処理に失敗しました。');
                         return;
                     }
+
+                    // 退社打刻時
+                    if (type === KTR.STAMP.OFF) {
+                        // 業務終了打刻より1時間以上経過していたら備考に書き込み
+                        if (status.finish && KTR.service._diffHour(status.finish, status.leave) >= 1) {
+                            let editDateMoment = moment();
+                            if (editDateMoment.format('H') < 10) {
+                                editDateMoment.subtract(1, 'day');
+                            }
+                            KTR.service._saveRemarks(editDateMoment);
+                        }
+                    }
+
                     KTR.notify({
                         message: KTR.ACTION[type] + 'しました。',
                         contextMessage: ['', status.start, status.finish, status.leave][type]
@@ -562,6 +591,49 @@
                 .then((res) => res.text())
                 .then(cb)
                 .catch(KTR.service.error);
+        },
+
+        _diffHour(start, end) {
+            return moment.utc(moment(end, 'HH:mm').diff(moment(start, 'HH:mm'))).format('H');
+        },
+
+        _saveRemarks(editDateMoment = moment()) {
+            const others = KTR.others.get();
+            if (others.remarksTemplate == null || others.remarksTemplate === '') {
+                return;
+            }
+
+            $.get(KTR.service.url(), {
+                module: 'timesheet',
+                action: 'browse'
+            }, (html) => {
+                const $form = $(html).find('#submit_form0');
+                $form.find('[name="action"]').val('editor');
+                $form.find('[name="Edit_Year"]').val(editDateMoment.format('YYYY'));
+                $form.find('[name="Edit_Month"]').val(editDateMoment.format('MM'));
+                $form.find('[name="Edit_Day"]').val(editDateMoment.format('DD'));
+                $form.find('[name="is_edit_mode"]').val(1);
+                $form.find('[name="next_action"]').val('');
+
+                $.post(KTR.service.url(), $form.serialize(), (html) => {
+                    const $form = $(html).find('#submit_form0');
+                    $form.find('[name="returned"]').val(1);
+                    $form.find('[name="Edit_Year"]').val(editDateMoment.format('YYYY'));
+                    $form.find('[name="Edit_Month"]').val(editDateMoment.format('MM'));
+                    $form.find('[name="Edit_Day"]').val(editDateMoment.format('DD'));
+                    $form.find('[name="remarks"]').val(others.remarksTemplate);
+
+                    $.ajax({
+                        type: 'POST',
+                        url: KTR.service.url(),
+                        data: $form.serialize(),
+                        cache: false,
+                        xhrFields: {
+                            withCredentials: true
+                        }
+                    });
+                });
+            });
         },
 
         // ネットワークエラー

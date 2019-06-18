@@ -25,6 +25,9 @@ function restore() {
     $('#finish-alarm-end').val(alarms.finishAlarmEnd);
     $('#leave-alarm-begin').val(alarms.leaveAlarmBegin);
     $('#leave-alarm-end').val(alarms.leaveAlarmEnd);
+
+    const others = KTR.others.get();
+    $('#remarks-template').val(others.remarksTemplate);
 }
 
 // 設定を保存する
@@ -47,6 +50,9 @@ function save() {
         finishAlarmEnd: $('#finish-alarm-end').val(),
         leaveAlarmBegin: $('#leave-alarm-begin').val(),
         leaveAlarmEnd: $('#leave-alarm-end').val()
+    });
+    KTR.others.update({
+        remarksTemplate: $('#remarks-template').val()
     });
 
     KTR.notify({
